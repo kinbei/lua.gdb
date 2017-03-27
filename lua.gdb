@@ -5,7 +5,7 @@ define btlua
       printf "type(0x%02x) ", $tt
       if ( $tt  == 0x06 )
           set $proto = ((union GCUnion *)($p.func.value_.gc)).cl.l.p
-          set $filename = (char*)($proto.source) + sizeof(TString) + 1
+          set $filename = (char*)($proto.source) + sizeof(TString)
           set $lineno = $proto.lineinfo[ $p.u.l.savedpc - $proto.code -1 ]
           printf "0x%x LUA FUNCTION : %4d %s\n", $p, $lineno, $filename
 
