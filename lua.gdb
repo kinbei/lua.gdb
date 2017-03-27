@@ -2,10 +2,10 @@ define btlua
     set $p = L.ci
     while ($p != 0 )
       set $tt = ($p.func.tt_ & 0x3f)
-      printf "tt: %x\t", $tt
+      printf "type(0x%02x) ", $tt
       if ( $tt  == 0x06 )
           set $proto = ((union GCUnion *)($p.func.value_.gc)).cl.l.p
-          set $filename = (char*)($proto.source) + sizeof(TString) + 4
+          set $filename = (char*)($proto.source) + sizeof(TString) + 1
           set $lineno = $proto.lineinfo[ $p.u.l.savedpc - $proto.code -1 ]
           printf "0x%x LUA FUNCTION : %4d %s\n", $p, $lineno, $filename
 
