@@ -6,7 +6,7 @@ define btlua
       if ( $tt  == 0x06 )
           set $proto = ((union GCUnion *)($p.func.value_.gc)).cl.l.p
           set $filename = (char*)($proto.source) + sizeof(TString)
-          set $lineno = $proto.lineinfo[ $p.u.l.savedpc - $proto.code -1 ]
+          set $lineno = $proto.lineinfo[$p.u.l.savedpc - $proto.code - 1]
           printf "0x%x LUA FUNCTION : %4d %s\n", $p, $lineno, $filename
 
           set $p = $p.previous
