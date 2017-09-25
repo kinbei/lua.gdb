@@ -24,7 +24,7 @@ define btlua
 
       if ( $tt == 0x26 )
           printf "0x%x C FUNCTION", $p
-          output $p.func.value_.gc.cl.c.f
+          output ((union GCUnion *)($p.func.value_.gc)).cl.c.f
           printf "\n"
 
           set $p = $p.previous
