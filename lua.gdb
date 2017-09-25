@@ -3,6 +3,7 @@ define btlua
     while ($p != 0 )
       set $tt = ($p.func.tt_ & 0x3f)
       printf "type(0x%02x) ", $tt
+      
       if ( $tt  == 0x06 )
           set $proto = ((union GCUnion *)($p.func.value_.gc)).cl.l.p
           set $filename = (char*)($proto.source) + sizeof(TString)
