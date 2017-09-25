@@ -2,8 +2,8 @@ define btlua
     set $p = L.ci
     while ($p != 0 )
       set $tt = ($p.func.tt_ & 0x3f)
-      printf "type(0x%02x) ", $tt
       set $gcunion = ((union GCUnion *)($p.func.value_.gc))
+      printf "type(0x%02x) ", $tt     
       
       if ( $tt  == 0x06 )
           set $proto = $gcunion.cl.l.p
