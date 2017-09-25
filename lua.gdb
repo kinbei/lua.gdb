@@ -3,9 +3,10 @@ define btlua
     while ($p != 0 )
       set $tt = ($p.func.tt_ & 0x3f)
       printf "type(0x%02x) ", $tt
+      set $gcunion = ((union GCUnion *)($p.func.value_.gc))
       
       if ( $tt  == 0x06 )
-          set $proto = ((union GCUnion *)($p.func.value_.gc)).cl.l.p
+          set $proto = $gcunion.cl.l.p
           set $filename = (char*)($proto.source) + sizeof(TString)
           set $lineno = $proto.lineinfo[$p.u.l.savedpc - $proto.code - 1]
           printf "0x%x LUA FUNCTION : %4d %s\n", $p, $lineno, $filename
@@ -25,7 +26,7 @@ define btlua
 
       if ( $tt == 0x26 )
           printf "0x%x C FUNCTION", $p
-          output ((union GCUnion *)($p.func.value_.gc)).cl.c.f
+          output $gcunion.cl.c.f
           printf "\n"
 
           set $p = $p.previous
