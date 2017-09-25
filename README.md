@@ -1,1 +1,1 @@
-# gdb-btlua
+# lua.gdb
