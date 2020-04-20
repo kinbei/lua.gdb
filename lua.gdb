@@ -5,17 +5,25 @@ define btlua
       set $gcunion = ((union GCUnion *)($p.func.value_.gc))
       printf "type(0x%02x) ", $tt     
       
-      if ( $tt  == 0x06 )
+      if ($tt  == 0x06)
           set $proto = $gcunion.cl.l.p
           set $filename = (char*)($proto.source) + sizeof(TString)
           set $lineno = $proto.lineinfo[$p.u.l.savedpc - $proto.code - 1]
-          printf "0x%x LUA FUNCTION : %4d %s\n", $p, $lineno, $filename
+	  
+		printf "0x%x LUA FUNCTION : %s:%d, localvars(%d) \n", $p, $filename, $lineno, $proto.sizelocvars
+
+	  set $i = 0
+	  while($i < $proto.sizelocvars)
+	        set $localvar = (LocVar*)$proto.locvars + $i
+	  	printf "\t %s \n", (char*)($localvar.varname) + sizeof(TString)
+		set $i = $i + 1
+          end
 
           set $p = $p.previous
           loop_continue
       end
 
-      if ( $tt == 0x16 )
+      if ($tt == 0x16)
           printf "0x%x LIGHT C FUNCTION", $p
           output $p.func.value_.f
           printf "\n"
@@ -24,7 +32,7 @@ define btlua
           loop_continue
       end
 
-      if ( $tt == 0x26 )
+      if ($tt == 0x26)
           printf "0x%x C FUNCTION", $p
           output $gcunion.cl.c.f
           printf "\n"
