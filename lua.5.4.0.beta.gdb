@@ -9,12 +9,18 @@ define rawtt
 end
 
 define makevariant
-	set $retval = (($arg0) | (($arg1) << 4))
+	set $retval = (($arg0) | ($arg1 << 4))
 end
 
+# Lua closure
 makevariant $LUA_TFUNCTION 0
 set $LUA_VLCL = $retval
 
+# light C function
+makevariant $LUA_TFUNCTION 1
+set $LUA_VLCF = $retval
+
+# C closure
 makevariant $LUA_TFUNCTION 2
 set $LUA_VCCL = $retval
 
@@ -47,49 +53,55 @@ define clvalue
 end
 
 define noLuaClosure
+	set $retval = 0
+	
 	if ($arg0 == (void *)0)
 		set $retval = 1
 	else
-		if (($arg0)->c.tt == $LUA_VCCL)
-			set $retval = 1
-		else
-			set $retval = 0
-		end
-	end
-end
-
-define funcinfo
-	set $Closure = $arg0
-
-	noLuaClosure $Closure
-	if ($retval == 1)
-		printf "=[C] \n"
-	else
-		set $proto = $Closure->l.p
-		if ($proto.source == (void *)0)
-			printf "=[?] \n"
-		else
-			set $filename = ((char*)($proto.source) + sizeof(TString))
-			p $filename
-		end
-	end
+		# is C closure ?
+		set $retval = (($arg0)->c.tt == $LUA_VCCL)
+	end	
 end
 
 define btlua
-	set $ci = L.ci
-	while ($ci != &(L.base_ci))
-		s2v $ci->func
+	set $CallInfo = L.ci
+	while ($CallInfo != &(L.base_ci))
+		# convert a 'StackValue' to a 'TValue'
+		s2v $CallInfo->func
 		set $func = $retval
 
-		ttisclosure $func
-		if ($retval == 0)
+		rawtt $func
+		set $ttype = $retval & 0x3F
+
+		printf "type(%d) ", $ttype
+		if ($ttype == 0x16)
 			clvalue $func
 			set $Closure = $retval
-		else
-			set $Closure = (void *)(0)
+			set $proto = $Closure->l.p
+			set $filename = ((char*)($proto.source) + sizeof(TString))
+			set $lineno = $proto.lineinfo[$CallInfo.u.l.savedpc - $proto.code - 1]
+			printf "Lua function: %s:%d \n", $filename, $lineno
+
+			set $CallInfo = $CallInfo.previous
+			loop_continue
+		end
+		
+		if ($ttype == 0x36)
+			clvalue $func
+			set $Closure = $retval
+			printf "C closure: "
+			p $Closure.c.f
+
+			set $CallInfo = $CallInfo.previous
+			loop_continue
 		end
 
-		funcinfo $Closure
-		set $ci = $ci.previous
+
+		printf "Unknow: type = %d \n", $ttype
+		clvalue $func
+		set $Closure = $retval
+		p *$Closure
+
+		set $CallInfo = $CallInfo.previous
 	end
 end
