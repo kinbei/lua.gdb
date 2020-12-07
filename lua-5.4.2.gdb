@@ -1,5 +1,6 @@
-# define NULL
+#
 set $NULL = 0
+set $TRUE = 1
 
 # basic types
 set $LUA_TFUNCTION = 6
@@ -55,7 +56,7 @@ end
 
 define noLuaClosure
 	if $arg0 == $NULL
-		set $retval = 1
+		set $retval = $TRUE
 	else
 		set $retval = (($arg0)->c.tt == $LUA_VCCL)
 	end
@@ -70,7 +71,7 @@ end
 
 define gco2lcl
 	cast_u $arg0
-	set $retval = &((cast_u($retval))->cl.l)
+	set $retval = &(($retval)->cl.l)
 end
 
 define clLvalue
@@ -109,7 +110,6 @@ define getbaseline
 		if $arg1 >= $arg0->abslineinfo[$arg0->sizeabslineinfo - 1].pc
 			set $v1 = (unsigned int)($arg0->sizeabslineinfo - 1)
 		else
-			
 			set $v2 = (unsigned int)($arg0->sizeabslineinfo - 1)
 			set $v1 = 0
 
@@ -130,7 +130,7 @@ end
 
 # int luaG_getfuncline (const Proto *f, int pc)
 define luaG_getfuncline
-	if $arg0 == $NULL
+	if $arg0->lineinfo == $NULL
 		set $retval = -1
 	else
 		set $basepc = 0
@@ -155,24 +155,33 @@ define getcurrentline
 	luaG_getfuncline $v1 $v2
 end
 
+# getstr
+define getstr
+	set $retval = ($arg0)->contents
+end
+
+# void funcinfo (lua_Debug *ar, Closure *cl)
 define funcinfo
 	set $Closure = $arg0
 	set $ci = $arg1
 
 	# printf source
 	noLuaClosure $Closure
-
-	if $retval == 1
+	if $retval == $TRUE
 		printf "=[C]"
 	else
 		set $proto = $Closure->l.p
-		set $source = ((char*)($proto.source) + sizeof(TString))
-		printf "%s", $source
+		if $proto.source != $NULL
+			getstr $proto.source
+			printf "%s", $retval
+		else
+			printf "=?"
+		end
 	end
 	
 	# printf lineno
 	isLua $ci
-	if $ci != $NULL && $retval == 1
+	if $ci != $NULL && $retval == $TRUE
 		getcurrentline $ci
 		printf ":%d", $retval
 	else
@@ -191,6 +200,7 @@ define traceback
 
 	set $ci = L.ci
 	while ($ci != &(L.base_ci))
+		# func = s2v(ci->func)
 		s2v $ci->func
 		set $func = $retval
 
