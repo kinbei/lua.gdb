@@ -1,7 +1,7 @@
 # lua.gdb
 
 注意:    
-* `Lua` 必须采用`-g`编译, `make linux -D MYCFLAGS='-g'`    
+* `Lua` 必须采用`-g`编译, `make linux MYCFLAGS='-g'`    
 * 不同`Lua`版本实现有差异, 请在对应的版本使用脚本    
 
 参考资料:
